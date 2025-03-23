@@ -47,9 +47,9 @@ export default function EmptyState() {
             <div>To use this application, please update your Firebase security rules in the Firebase Console:</div>
             <div style={{ margin: "10px 0" }}>
               <ol style={{ textAlign: "left", margin: "10px 0", paddingLeft: "20px" }}>
-                <li>Go to the Firebase Console</li>
-                <li>Select your project</li>
-                <li>Go to Firestore Database</li>
+                <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Firebase Console</a></li>
+                <li>Select your project: <strong>note-taker-1a709</strong></li>
+                <li>Go to Firestore Database in the left sidebar</li>
                 <li>Select the "Rules" tab</li>
                 <li>Update your rules to allow read/write access:</li>
               </ol>
@@ -73,7 +73,17 @@ service cloud.firestore {
               </pre>
             </div>
             <div style={{ marginTop: "10px" }}>
-              This allows any authenticated user to read and write their own data.
+              This allows any authenticated user to read and write data. Click "Publish" after updating the rules.
+            </div>
+            <div style={{ marginTop: "10px", fontWeight: "bold" }}>
+              Also check these additional settings:
+            </div>
+            <div style={{ margin: "10px 0" }}>
+              <ol style={{ textAlign: "left", margin: "10px 0", paddingLeft: "20px" }}>
+                <li>Go to Authentication in the sidebar</li>
+                <li>Make sure Google Sign-in method is enabled</li>
+                <li>Add the URL of this app to the Authorized domains list</li>
+              </ol>
             </div>
           </div>
         ) : (
