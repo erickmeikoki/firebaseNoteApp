@@ -3,6 +3,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { Note, Tag } from "../../types";
 import { useToast } from "@/hooks/use-toast";
+import { useNotes } from "../../hooks/useNotes";
 
 interface NoteEditorProps {
   note: Note;

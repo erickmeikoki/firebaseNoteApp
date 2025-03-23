@@ -219,6 +219,39 @@ p {
   font-size: 1.1rem;
   margin-bottom: var(--space-xs);
   line-height: 1.4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card:hover .card-actions {
+  opacity: 1;
+}
+
+.card-delete-btn {
+  background: none;
+  border: none;
+  color: var(--neutral-500);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.card-delete-btn:hover {
+  background-color: var(--error);
+  color: white;
 }
 
 .card-meta {

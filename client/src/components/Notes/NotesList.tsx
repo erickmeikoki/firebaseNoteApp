@@ -16,7 +16,8 @@ export default function NotesList({ openEditor }: NotesListProps) {
     searchTerm, 
     setSearchTerm,
     activeFilter,
-    setCurrentNote
+    setCurrentNote,
+    deleteNote
   } = useNotes();
   
   const [pageTitle, setPageTitle] = useState("All Notes");
@@ -39,6 +40,17 @@ export default function NotesList({ openEditor }: NotesListProps) {
   const handleOpenNote = (note: Note) => {
     setCurrentNote(note);
     openEditor(note);
+  };
+
+  const handleDeleteNote = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation(); // Prevent opening the note editor
+    
+    if (window.confirm("Are you sure you want to delete this note?")) {
+      deleteNote(noteId)
+        .catch(error => {
+          console.error("Error deleting note:", error);
+        });
+    }
   };
 
   const formatDate = (timestamp: any) => {
@@ -71,7 +83,18 @@ export default function NotesList({ openEditor }: NotesListProps) {
               className="card" 
               onClick={() => handleOpenNote(note)}
             >
-              <div className="card-title">{note.title || "Untitled"}</div>
+              <div className="card-title">
+                {note.title || "Untitled"}
+                <div className="card-actions">
+                  <button 
+                    className="card-delete-btn" 
+                    onClick={(e) => handleDeleteNote(e, note.id)}
+                    aria-label="Delete note"
+                  >
+                    <span className="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
               <div className="card-meta">
                 <span>{formatDate(note.updatedAt)}</span>
                 {note.tags && note.tags.length > 0 && (
