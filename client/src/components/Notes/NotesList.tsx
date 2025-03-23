@@ -17,7 +17,10 @@ export default function NotesList({ openEditor }: NotesListProps) {
     setSearchTerm,
     activeFilter,
     setCurrentNote,
-    deleteNote
+    deleteNote,
+    permanentlyDeleteNote,
+    restoreNote,
+    toggleFavorite
   } = useNotes();
   
   const [pageTitle, setPageTitle] = useState("All Notes");
@@ -45,12 +48,40 @@ export default function NotesList({ openEditor }: NotesListProps) {
   const handleDeleteNote = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation(); // Prevent opening the note editor
     
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      deleteNote(noteId)
-        .catch(error => {
-          console.error("Error deleting note:", error);
-        });
+    if (window.confirm(activeFilter === "trash" 
+        ? "Are you sure you want to permanently delete this note? This cannot be undone."
+        : "Are you sure you want to move this note to trash?")) {
+      
+      if (activeFilter === "trash") {
+        permanentlyDeleteNote(noteId)
+          .catch(error => {
+            console.error("Error permanently deleting note:", error);
+          });
+      } else {
+        deleteNote(noteId)
+          .catch(error => {
+            console.error("Error moving note to trash:", error);
+          });
+      }
     }
+  };
+
+  const handleRestoreNote = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation(); // Prevent opening the note editor
+    
+    restoreNote(noteId)
+      .catch(error => {
+        console.error("Error restoring note:", error);
+      });
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation(); // Prevent opening the note editor
+    
+    toggleFavorite(noteId)
+      .catch(error => {
+        console.error("Error toggling favorite status:", error);
+      });
   };
 
   const formatDate = (timestamp: any) => {
@@ -86,12 +117,36 @@ export default function NotesList({ openEditor }: NotesListProps) {
               <div className="card-title">
                 {note.title || "Untitled"}
                 <div className="card-actions">
+                  {activeFilter === "trash" ? (
+                    <button 
+                      className="card-action-btn" 
+                      onClick={(e) => handleRestoreNote(e, note.id)}
+                      aria-label="Restore note"
+                      title="Restore note"
+                    >
+                      <span className="material-icons">restore</span>
+                    </button>
+                  ) : (
+                    <button 
+                      className={`card-action-btn ${note.isFavorite ? 'active' : ''}`} 
+                      onClick={(e) => handleToggleFavorite(e, note.id)}
+                      aria-label={note.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      title={note.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <span className="material-icons">
+                        {note.isFavorite ? "star" : "star_outline"}
+                      </span>
+                    </button>
+                  )}
                   <button 
-                    className="card-delete-btn" 
+                    className="card-action-btn delete" 
                     onClick={(e) => handleDeleteNote(e, note.id)}
-                    aria-label="Delete note"
+                    aria-label={activeFilter === "trash" ? "Delete permanently" : "Move to trash"}
+                    title={activeFilter === "trash" ? "Delete permanently" : "Move to trash"}
                   >
-                    <span className="material-icons">delete</span>
+                    <span className="material-icons">
+                      {activeFilter === "trash" ? "delete_forever" : "delete"}
+                    </span>
                   </button>
                 </div>
               </div>
