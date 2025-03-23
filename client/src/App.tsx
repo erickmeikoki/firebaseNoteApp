@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { NotesProvider } from "./context/NotesContext";
 import Home from "./pages/home";
 import Auth from "./pages/auth";
+import SharedNote from "./pages/shared-note";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -11,6 +12,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
+      <Route path="/shared/:shareId" component={SharedNote} />
       <Route component={NotFound} />
     </Switch>
   );
