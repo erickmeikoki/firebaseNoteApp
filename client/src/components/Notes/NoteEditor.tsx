@@ -29,7 +29,7 @@ export default function NoteEditor({
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { deleteNote } = useNotes();
+  const { deleteNote, toggleFavorite } = useNotes();
 
   useEffect(() => {
     setTitle(note.title);
@@ -117,6 +117,30 @@ export default function NoteEditor({
       }
     }
   };
+  
+  const handleToggleFavorite = async () => {
+    if (isNew) return; // Don't toggle favorite on a note that hasn't been saved yet
+    
+    try {
+      await toggleFavorite(note.id);
+      // No need to close the editor
+    } catch (err: any) {
+      console.error("Error toggling favorite status:", err);
+      if (err.code === "permission-denied") {
+        toast({
+          title: "Permissions Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: err.message || "Failed to update favorite status",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const toggleTag = (tag: Tag) => {
     setSelectedTags(prev => {
@@ -158,7 +182,21 @@ export default function NoteEditor({
     >
       <div className="modal">
         <div className="modal-header">
-          <h2 className="modal-title">{isNew ? "Create Note" : "Edit Note"}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <h2 className="modal-title">{isNew ? "Create Note" : "Edit Note"}</h2>
+            {!isNew && (
+              <button 
+                className={`toolbar-btn ${note.isFavorite ? 'active' : ''}`}
+                onClick={handleToggleFavorite}
+                title={note.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                style={{ marginLeft: "10px" }}
+              >
+                <span className="material-icons">
+                  {note.isFavorite ? "star" : "star_outline"}
+                </span>
+              </button>
+            )}
+          </div>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body">

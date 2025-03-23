@@ -236,7 +236,7 @@ p {
   opacity: 1;
 }
 
-.card-delete-btn {
+.card-action-btn {
   background: none;
   border: none;
   color: var(--neutral-500);
@@ -249,7 +249,21 @@ p {
   transition: all 0.2s ease;
 }
 
-.card-delete-btn:hover {
+.card-action-btn:hover {
+  background-color: var(--neutral-200);
+  color: var(--neutral-700);
+}
+
+.card-action-btn.active {
+  color: var(--primary);
+}
+
+.card-action-btn.active:hover {
+  background-color: rgba(74, 111, 255, 0.1);
+  color: var(--primary);
+}
+
+.card-action-btn.delete:hover {
   background-color: var(--error);
   color: white;
 }

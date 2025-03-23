@@ -27,7 +27,7 @@ export default function EmptyState() {
     description = "Mark notes as favorites to see them here.";
   } else if (activeFilter === "trash") {
     title = "Trash is empty";
-    description = "Notes you delete will appear here.";
+    description = "Notes you delete will appear here. You can restore or permanently delete them.";
   } else if (activeFilter.startsWith("tag:")) {
     title = "No notes with this tag";
     description = "Add this tag to notes to see them here.";
