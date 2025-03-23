@@ -3,34 +3,20 @@ import { collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, 
 import { db } from "../lib/firebase";
 import { AuthContext } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
-
-export interface Tag {
-  id: string;
-  name: string;
-  color: string;
-  count?: number;
-}
-
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  tags: Tag[];
-  isFavorite: boolean;
-  isArchived: boolean;
-}
+import { Note, Tag, Notebook } from "@/types";
 
 interface NotesContextType {
   notes: Note[];
   tags: Tag[];
+  notebooks: Notebook[];
   loading: boolean;
   activeFilter: string;
+  activeNotebook: string | null;
   searchTerm: string;
   currentNote: Note | null;
   setCurrentNote: (note: Note | null) => void;
   setActiveFilter: (filter: string) => void;
+  setActiveNotebook: (notebookId: string | null) => void;
   setSearchTerm: (term: string) => void;
   addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateNote: (id: string, note: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
@@ -39,18 +25,25 @@ interface NotesContextType {
   restoreNote: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   addTag: (tag: Omit<Tag, 'id'>) => Promise<string>;
+  addNotebook: (notebook: Omit<Notebook, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateNotebook: (id: string, notebook: Partial<Omit<Notebook, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deleteNotebook: (id: string) => Promise<void>;
+  moveNoteToNotebook: (noteId: string, notebookId: string | null) => Promise<void>;
   filteredNotes: Note[];
 }
 
 export const NotesContext = createContext<NotesContextType>({
   notes: [],
   tags: [],
+  notebooks: [],
   loading: true,
   activeFilter: "all",
+  activeNotebook: null,
   searchTerm: "",
   currentNote: null,
   setCurrentNote: () => {},
   setActiveFilter: () => {},
+  setActiveNotebook: () => {},
   setSearchTerm: () => {},
   addNote: async () => {},
   updateNote: async () => {},
@@ -59,14 +52,20 @@ export const NotesContext = createContext<NotesContextType>({
   restoreNote: async () => {},
   toggleFavorite: async () => {},
   addTag: async () => "",
+  addNotebook: async () => "",
+  updateNotebook: async () => {},
+  deleteNotebook: async () => {},
+  moveNoteToNotebook: async () => {},
   filteredNotes: [],
 });
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [activeNotebook, setActiveNotebook] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   

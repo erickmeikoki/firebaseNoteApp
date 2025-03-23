@@ -14,6 +14,16 @@ export interface Tag {
   count?: number;
 }
 
+export interface Notebook {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -23,6 +33,7 @@ export interface Note {
   tags: Tag[];
   isFavorite: boolean;
   isArchived: boolean;
+  notebookId?: string;
 }
 
 export interface LoginForm {
