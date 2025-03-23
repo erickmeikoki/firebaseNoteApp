@@ -44,7 +44,7 @@ export default function EmptyState() {
       <div className="empty-state-description">
         {showPermissionsHelp ? (
           <div>
-            <div>To use this application, please update your Firebase security rules in the Firebase Console:</div>
+            <p>To use this application, please update your Firebase security rules in the Firebase Console:</p>
             <div style={{ margin: "10px 0" }}>
               <ol style={{ textAlign: "left", margin: "10px 0", paddingLeft: "20px" }}>
                 <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Firebase Console</a></li>
@@ -61,7 +61,7 @@ export default function EmptyState() {
               borderRadius: "4px", 
               overflow: "auto"
             }}>
-              <pre style={{ margin: 0, fontSize: "0.8rem" }}>
+              <code style={{ display: "block", margin: 0, fontSize: "0.8rem", whiteSpace: "pre" }}>
                 {`rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -70,14 +70,14 @@ service cloud.firestore {
     }
   }
 }`}
-              </pre>
+              </code>
             </div>
-            <div style={{ marginTop: "10px" }}>
+            <p style={{ marginTop: "10px" }}>
               This allows any authenticated user to read and write data. Click "Publish" after updating the rules.
-            </div>
-            <div style={{ marginTop: "10px", fontWeight: "bold" }}>
+            </p>
+            <p style={{ marginTop: "10px", fontWeight: "bold" }}>
               Also check these additional settings:
-            </div>
+            </p>
             <div style={{ margin: "10px 0" }}>
               <ol style={{ textAlign: "left", margin: "10px 0", paddingLeft: "20px" }}>
                 <li>Go to Authentication in the sidebar</li>
