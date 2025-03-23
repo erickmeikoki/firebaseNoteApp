@@ -44,14 +44,16 @@ export default function EmptyState() {
       <div className="empty-state-description">
         {showPermissionsHelp ? (
           <div>
-            <p>To use this application, please update your Firebase security rules in the Firebase Console:</p>
-            <ol style={{ textAlign: "left", marginTop: "10px", marginBottom: "10px" }}>
-              <li>Go to the Firebase Console</li>
-              <li>Select your project</li>
-              <li>Go to Firestore Database</li>
-              <li>Select the "Rules" tab</li>
-              <li>Update your rules to allow read/write access:</li>
-            </ol>
+            <div>To use this application, please update your Firebase security rules in the Firebase Console:</div>
+            <div style={{ margin: "10px 0" }}>
+              <ol style={{ textAlign: "left", margin: "10px 0", paddingLeft: "20px" }}>
+                <li>Go to the Firebase Console</li>
+                <li>Select your project</li>
+                <li>Go to Firestore Database</li>
+                <li>Select the "Rules" tab</li>
+                <li>Update your rules to allow read/write access:</li>
+              </ol>
+            </div>
             <div style={{ 
               textAlign: "left", 
               background: "#f5f5f5", 
@@ -70,9 +72,9 @@ service cloud.firestore {
 }`}
               </pre>
             </div>
-            <p style={{ marginTop: "10px" }}>
+            <div style={{ marginTop: "10px" }}>
               This allows any authenticated user to read and write their own data.
-            </p>
+            </div>
           </div>
         ) : (
           <p>{description}</p>

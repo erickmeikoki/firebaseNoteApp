@@ -49,7 +49,8 @@ export default function NotesLayout() {
         updatedAt: Timestamp.now(),
         tags: [],
         isFavorite: false,
-        isArchived: false
+        isArchived: false,
+        notebookId: undefined
       });
       setIsNewNote(true);
     }
@@ -66,6 +67,7 @@ export default function NotesLayout() {
     title: string;
     content: string;
     tags: Tag[];
+    notebookId?: string;
   }) => {
     try {
       if (isNewNote) {
@@ -73,6 +75,7 @@ export default function NotesLayout() {
           title: note.title,
           content: note.content,
           tags: note.tags,
+          notebookId: note.notebookId,
           isFavorite: false,
           isArchived: false
         });
@@ -80,7 +83,8 @@ export default function NotesLayout() {
         await updateNote(editingNote.id, {
           title: note.title,
           content: note.content,
-          tags: note.tags
+          tags: note.tags,
+          notebookId: note.notebookId
         });
       }
       closeEditor();
@@ -121,6 +125,7 @@ export default function NotesLayout() {
         <NoteEditor
           note={editingNote}
           availableTags={tags}
+          availableNotebooks={notebooks}
           isOpen={isEditorOpen}
           isNew={isNewNote}
           onClose={closeEditor}
