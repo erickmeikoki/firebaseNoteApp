@@ -29,6 +29,7 @@ export default function NoteEditor({
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { deleteNote } = useNotes();
 
   useEffect(() => {
     setTitle(note.title);
@@ -77,6 +78,43 @@ export default function NoteEditor({
   const handleClickOutside = (e: React.MouseEvent) => {
     if (modalRef.current && e.target === modalRef.current) {
       onClose();
+    }
+  };
+  
+  const handleDelete = async () => {
+    if (isNew) return; // Don't try to delete a note that hasn't been saved yet
+    
+    if (window.confirm("Are you sure you want to delete this note? This action cannot be undone.")) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        await deleteNote(note.id);
+        onClose();
+        toast({
+          title: "Success",
+          description: "Note deleted successfully",
+        });
+      } catch (err: any) {
+        console.error("Error deleting note:", err);
+        
+        if (err.code === "permission-denied") {
+          setError("Firebase permissions error: Please update your Firestore security rules.");
+          toast({
+            title: "Permissions Error",
+            description: "Please update your Firebase security rules to allow write access.",
+            variant: "destructive",
+          });
+        } else {
+          setError(err.message || "Failed to delete note");
+          toast({
+            title: "Error",
+            description: err.message || "Failed to delete note",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -190,20 +228,39 @@ export default function NoteEditor({
           </div>
         </div>
         <div className="modal-footer">
-          <button 
-            className="btn btn-secondary" 
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button 
-            className="btn" 
-            onClick={handleSave}
-            disabled={isLoading}
-          >
-            {isLoading ? "Saving..." : "Save"}
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+            {!isNew && (
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleDelete}
+                disabled={isLoading}
+                style={{ 
+                  backgroundColor: "rgba(220, 53, 69, 0.1)", 
+                  color: "var(--error)",
+                  borderColor: "rgba(220, 53, 69, 0.2)" 
+                }}
+              >
+                <span className="material-icons" style={{ fontSize: "16px", marginRight: "4px" }}>delete</span>
+                Delete
+              </button>
+            )}
+            <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn" 
+                onClick={handleSave}
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
