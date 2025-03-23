@@ -41,10 +41,10 @@ export default function EmptyState() {
       <h3 className="empty-state-title">
         {showPermissionsHelp ? "Firestore Permissions Required" : title}
       </h3>
-      <p className="empty-state-description">
+      <div className="empty-state-description">
         {showPermissionsHelp ? (
-          <>
-            To use this application, please update your Firebase security rules in the Firebase Console:
+          <div>
+            <p>To use this application, please update your Firebase security rules in the Firebase Console:</p>
             <ol style={{ textAlign: "left", marginTop: "10px", marginBottom: "10px" }}>
               <li>Go to the Firebase Console</li>
               <li>Select your project</li>
@@ -72,11 +72,11 @@ service cloud.firestore {
             <div style={{ marginTop: "10px" }}>
               This allows any authenticated user to read and write their own data.
             </div>
-          </>
+          </div>
         ) : (
-          description
+          <p>{description}</p>
         )}
-      </p>
+      </div>
       {!searchTerm && activeFilter !== "trash" && !showPermissionsHelp && (
         <button className="btn">
           <span className="material-icons">add</span>
