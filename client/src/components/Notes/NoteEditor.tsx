@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { Note, Tag, Notebook } from "../../types";
+import { Note, Tag, Notebook, ShareInfo } from "../../types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from "../../hooks/useNotes";
 import { exportNoteToPDF } from "../../lib/pdfExport";
+import { shareNote, deleteShare } from "../../lib/shareUtils";
+import { useAuth } from "../../hooks/useAuth";
 
 interface NoteEditorProps {
   note: Note;
@@ -31,10 +33,18 @@ export default function NoteEditor({
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | undefined>(note.notebookId);
   const [isLoading, setIsLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [shareIsPublic, setShareIsPublic] = useState(true);
+  const [shareAllowEdit, setShareAllowEdit] = useState(false);
+  const [shareExpiresAfter, setShareExpiresAfter] = useState(0); // 0 means never expires
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const shareUrlRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { deleteNote, toggleFavorite } = useNotes();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     setTitle(note.title);
@@ -201,6 +211,99 @@ export default function NoteEditor({
       setExportLoading(false);
     }
   };
+  
+  const handleShareNote = async () => {
+    if (isNew) {
+      toast({
+        title: "Save Required",
+        description: "Please save the note before sharing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to share notes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setShareLoading(true);
+      setError(null);
+      
+      // Calculate expiration time in milliseconds if specified
+      const expiresAfter = shareExpiresAfter === 0 
+        ? undefined 
+        : shareExpiresAfter * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+      
+      // Create a current version of the note with edited content
+      const currentNote = {
+        ...note,
+        title,
+        content,
+        tags: selectedTags
+      };
+      
+      const shareInfo = await shareNote(
+        currentNote,
+        currentUser.uid,
+        {
+          isPublic: shareIsPublic,
+          allowEdit: shareAllowEdit,
+          expiresAfter
+        }
+      );
+      
+      setShareUrl(shareInfo.shareUrl);
+      
+      toast({
+        title: "Note Shared",
+        description: "Share link has been generated!",
+      });
+      
+      // Select the URL for easy copying
+      if (shareUrlRef.current) {
+        setTimeout(() => {
+          shareUrlRef.current?.select();
+        }, 100);
+      }
+    } catch (err: any) {
+      console.error("Error sharing note:", err);
+      if (err.code === "permission-denied") {
+        setError("Firebase permissions error: Please update your Firestore security rules.");
+        toast({
+          title: "Permissions Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        setError(err.message || "Failed to share note");
+        toast({
+          title: "Share Error",
+          description: err.message || "Failed to share note",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setShareLoading(false);
+    }
+  };
+  
+  const copyShareUrlToClipboard = () => {
+    if (shareUrl && shareUrlRef.current) {
+      shareUrlRef.current.select();
+      document.execCommand('copy');
+      
+      toast({
+        title: "Copied!",
+        description: "Share link copied to clipboard",
+      });
+    }
+  };
 
   const modules = {
     toolbar: [
@@ -325,6 +428,116 @@ export default function NoteEditor({
               </button>
             </div>
           </div>
+          
+          {!isNew && showShareOptions && (
+            <div className="form-group share-options-container" style={{ 
+              border: '1px solid var(--border)', 
+              borderRadius: '8px', 
+              padding: '16px', 
+              marginTop: '16px',
+              backgroundColor: 'rgba(13, 110, 253, 0.03)'
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-icons" style={{ fontSize: '20px', color: 'var(--primary)' }}>share</span>
+                Share Note
+              </h3>
+              
+              {shareUrl ? (
+                <div>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">Share Link</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        value={shareUrl} 
+                        readOnly 
+                        ref={shareUrlRef}
+                        style={{ flex: 1 }}
+                      />
+                      <button 
+                        className="btn btn-secondary"
+                        onClick={copyShareUrlToClipboard}
+                        style={{
+                          backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                          color: 'var(--primary)',
+                          borderColor: 'rgba(13, 110, 253, 0.2)'
+                        }}
+                      >
+                        <span className="material-icons" style={{ fontSize: '16px' }}>content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => setShareUrl(null)}
+                      style={{
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        color: 'var(--error)',
+                        borderColor: 'rgba(220, 53, 69, 0.2)'
+                      }}
+                    >
+                      Create New Share Link
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        id="shareIsPublic"
+                        checked={shareIsPublic} 
+                        onChange={(e) => setShareIsPublic(e.target.checked)}
+                        style={{ marginRight: '8px' }}
+                      />
+                      <label htmlFor="shareIsPublic">Anyone with the link can view</label>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        id="shareAllowEdit"
+                        checked={shareAllowEdit} 
+                        onChange={(e) => setShareAllowEdit(e.target.checked)}
+                        style={{ marginRight: '8px' }}
+                      />
+                      <label htmlFor="shareAllowEdit">Allow others to edit</label>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label">Expires after</label>
+                    <select
+                      className="form-input"
+                      value={shareExpiresAfter}
+                      onChange={(e) => setShareExpiresAfter(Number(e.target.value))}
+                    >
+                      <option value="0">Never</option>
+                      <option value="1">1 day</option>
+                      <option value="7">1 week</option>
+                      <option value="30">30 days</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      className="btn"
+                      onClick={handleShareNote}
+                      disabled={shareLoading}
+                    >
+                      {shareLoading ? "Creating link..." : "Create share link"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="modal-footer">
           <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
@@ -345,36 +558,57 @@ export default function NoteEditor({
             )}
             <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
               {!isNew && (
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={handleExportToPdf}
-                  disabled={isLoading || exportLoading}
-                  style={{
-                    backgroundColor: "rgba(25, 135, 84, 0.1)",
-                    color: "var(--success)",
-                    borderColor: "rgba(25, 135, 84, 0.2)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
-                  }}
-                >
-                  <span className="material-icons" style={{ fontSize: "16px" }}>
-                    picture_as_pdf
-                  </span>
-                  {exportLoading ? "Exporting..." : "Export PDF"}
-                </button>
+                <>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => setShowShareOptions(!showShareOptions)}
+                    disabled={isLoading || shareLoading}
+                    style={{
+                      backgroundColor: "rgba(13, 110, 253, 0.1)",
+                      color: "var(--primary)",
+                      borderColor: "rgba(13, 110, 253, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span className="material-icons" style={{ fontSize: "16px" }}>
+                      share
+                    </span>
+                    {shareLoading ? "Sharing..." : "Share"}
+                  </button>
+                  
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={handleExportToPdf}
+                    disabled={isLoading || exportLoading}
+                    style={{
+                      backgroundColor: "rgba(25, 135, 84, 0.1)",
+                      color: "var(--success)",
+                      borderColor: "rgba(25, 135, 84, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span className="material-icons" style={{ fontSize: "16px" }}>
+                      picture_as_pdf
+                    </span>
+                    {exportLoading ? "Exporting..." : "Export PDF"}
+                  </button>
+                </>
               )}
               <button 
                 className="btn btn-secondary" 
                 onClick={onClose}
-                disabled={isLoading || exportLoading}
+                disabled={isLoading || exportLoading || shareLoading}
               >
                 Cancel
               </button>
               <button 
                 className="btn" 
                 onClick={handleSave}
-                disabled={isLoading || exportLoading}
+                disabled={isLoading || exportLoading || shareLoading}
               >
                 {isLoading ? "Saving..." : "Save"}
               </button>

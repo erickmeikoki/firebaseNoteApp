@@ -860,6 +860,31 @@ p {
   border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
 }
 
+/* Share styles */
+.share-options-container {
+  transition: all 0.3s ease;
+}
+
+.share-url-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.share-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(13, 110, 253, 0.1);
+  color: var(--primary);
+  border-color: rgba(13, 110, 253, 0.2);
+  font-weight: 500;
+}
+
+.share-link-btn:hover {
+  background-color: rgba(13, 110, 253, 0.15);
+}
+
 /* Media Queries */
 @media (max-width: 768px) {
   .app {
