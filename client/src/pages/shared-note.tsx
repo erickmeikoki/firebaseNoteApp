@@ -117,7 +117,9 @@ export default function SharedNote() {
               <div style={{ display: "flex", alignItems: "center", gap: "16px", color: "var(--neutral-600)", fontSize: "0.9rem" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <span className="material-icons" style={{ fontSize: "16px" }}>schedule</span>
-                  {new Date(note.createdAt.toDate()).toLocaleDateString()}
+                  {note.createdAt && typeof note.createdAt.toDate === 'function' 
+                    ? new Date(note.createdAt.toDate()).toLocaleDateString() 
+                    : new Date().toLocaleDateString()}
                 </span>
                 
                 <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
