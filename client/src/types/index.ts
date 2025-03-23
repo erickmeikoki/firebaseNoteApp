@@ -24,6 +24,15 @@ export interface Notebook {
   updatedAt: Timestamp;
 }
 
+export interface ShareInfo {
+  shareId: string;
+  isPublic: boolean;
+  allowEdit: boolean;
+  createdBy: string;
+  viewCount?: number;
+  expiresAt?: Date;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -34,6 +43,10 @@ export interface Note {
   isFavorite: boolean;
   isArchived: boolean;
   notebookId?: string;
+  shareIds?: string[];
+  lastSharedAt?: Timestamp;
+  isShared?: boolean;
+  shareInfo?: ShareInfo;
 }
 
 export interface LoginForm {
