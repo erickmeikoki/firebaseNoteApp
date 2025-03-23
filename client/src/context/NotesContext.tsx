@@ -245,12 +245,14 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Move note to trash
+  // Move note to trash (soft delete)
   const deleteNote = async (id: string) => {
     if (!currentUser) return;
 
     try {
       const noteRef = doc(db, "notes", id);
+      // We only update isArchived status and updatedAt timestamp
+      // This preserves other properties like isFavorite
       await updateDoc(noteRef, {
         isArchived: true,
         updatedAt: Timestamp.now()
@@ -317,6 +319,9 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const noteRef = doc(db, "notes", id);
+      
+      // We only update isArchived status and updatedAt timestamp
+      // This preserves other properties like isFavorite
       await updateDoc(noteRef, {
         isArchived: false,
         updatedAt: Timestamp.now()
@@ -430,7 +435,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     let passesFilter = true;
     
     if (activeFilter === "favorites") {
-      passesFilter = note.isFavorite;
+      passesFilter = note.isFavorite && !note.isArchived; // Only show favorites that are not in trash
     } else if (activeFilter === "trash") {
       passesFilter = note.isArchived;
     } else if (activeFilter === "all") {

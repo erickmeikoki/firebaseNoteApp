@@ -74,7 +74,7 @@ service cloud.firestore {
             </div>
           </div>
         ) : (
-          <p>{description}</p>
+          <div>{description}</div>
         )}
       </div>
       {!searchTerm && activeFilter !== "trash" && !showPermissionsHelp && (
