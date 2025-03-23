@@ -44,23 +44,23 @@ export default function EmptyState() {
       <div className="empty-state-description">
         {showPermissionsHelp ? (
           <div>
-            <div>To use this application, please update your Firebase security rules in the Firebase Console:</div>
-            <div style={{ textAlign: "left", marginTop: "10px", marginBottom: "10px" }}>
-              <div>1. Go to the Firebase Console</div>
-              <div>2. Select your project</div>
-              <div>3. Go to Firestore Database</div>
-              <div>4. Select the "Rules" tab</div>
-              <div>5. Update your rules to allow read/write access:</div>
-            </div>
-            <pre style={{ 
+            <p>To use this application, please update your Firebase security rules in the Firebase Console:</p>
+            <ol style={{ textAlign: "left", marginTop: "10px", marginBottom: "10px" }}>
+              <li>Go to the Firebase Console</li>
+              <li>Select your project</li>
+              <li>Go to Firestore Database</li>
+              <li>Select the "Rules" tab</li>
+              <li>Update your rules to allow read/write access:</li>
+            </ol>
+            <div style={{ 
               textAlign: "left", 
               background: "#f5f5f5", 
               padding: "10px", 
               borderRadius: "4px", 
-              overflow: "auto",
-              fontSize: "0.8rem" 
+              overflow: "auto"
             }}>
-              {`rules_version = '2';
+              <pre style={{ margin: 0, fontSize: "0.8rem" }}>
+                {`rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
@@ -68,13 +68,14 @@ service cloud.firestore {
     }
   }
 }`}
-            </pre>
-            <div style={{ marginTop: "10px" }}>
-              This allows any authenticated user to read and write their own data.
+              </pre>
             </div>
+            <p style={{ marginTop: "10px" }}>
+              This allows any authenticated user to read and write their own data.
+            </p>
           </div>
         ) : (
-          <div>{description}</div>
+          <p>{description}</p>
         )}
       </div>
       {!searchTerm && activeFilter !== "trash" && !showPermissionsHelp && (

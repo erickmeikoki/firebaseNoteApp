@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode, useContext } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, Timestamp, getDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, Timestamp, getDoc, writeBatch } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { AuthContext } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +77,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) {
       setNotes([]);
       setTags([]);
+      setNotebooks([]);
       setLoading(false);
       return;
     }
@@ -106,6 +107,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
             tags: data.tags || [],
             isFavorite: data.isFavorite || false,
             isArchived: data.isArchived || false,
+            notebookId: data.notebookId || null,
           });
         });
         
@@ -166,9 +168,46 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // Subscribe to notebooks collection
+    const notebooksQuery = query(
+      collection(db, "notebooks"),
+      where("userId", "==", currentUser.uid),
+      orderBy("updatedAt", "desc")
+    );
+
+    const unsubscribeNotebooks = onSnapshot(
+      notebooksQuery,
+      // Success handler
+      (snapshot) => {
+        const notebooksData: Notebook[] = [];
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          notebooksData.push({
+            id: doc.id,
+            name: data.name,
+            description: data.description || "",
+            color: data.color || "#4f46e5",
+            icon: data.icon || "📓",
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+          });
+        });
+        
+        setNotebooks(notebooksData);
+      },
+      // Error handler
+      (error) => {
+        console.error("Error fetching notebooks:", error);
+        // Set empty notebooks
+        setNotebooks([]);
+      }
+    );
+
     return () => {
       unsubscribeNotes();
       unsubscribeTags();
+      unsubscribeNotebooks();
     };
   }, [currentUser, toast]);
 
@@ -428,9 +467,169 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Filter notes based on activeFilter and searchTerm
+  // Add a new notebook
+  const addNotebook = async (notebook: Omit<Notebook, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    if (!currentUser) return "";
+
+    try {
+      const now = Timestamp.now();
+      const docRef = await addDoc(collection(db, "notebooks"), {
+        ...notebook,
+        userId: currentUser.uid,
+        createdAt: now,
+        updatedAt: now,
+      });
+      
+      toast({
+        title: "Success",
+        description: "Notebook created successfully",
+      });
+      
+      return docRef.id;
+    } catch (error: any) {
+      console.error("Error adding notebook:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create notebook",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Update an existing notebook
+  const updateNotebook = async (id: string, notebook: Partial<Omit<Notebook, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    if (!currentUser) return;
+
+    try {
+      const notebookRef = doc(db, "notebooks", id);
+      await updateDoc(notebookRef, {
+        ...notebook,
+        updatedAt: Timestamp.now(),
+      });
+      
+      toast({
+        title: "Success",
+        description: "Notebook updated successfully",
+      });
+    } catch (error: any) {
+      console.error("Error updating notebook:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update notebook",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Delete a notebook
+  const deleteNotebook = async (id: string) => {
+    if (!currentUser) return;
+
+    try {
+      // Check if there are any notes in this notebook
+      const notesInNotebook = notes.filter(note => note.notebookId === id && !note.isArchived);
+      
+      if (notesInNotebook.length > 0) {
+        // Move all notes to no notebook
+        const batch = writeBatch(db);
+        
+        notesInNotebook.forEach(note => {
+          const noteRef = doc(db, "notes", note.id);
+          batch.update(noteRef, { 
+            notebookId: null,
+            updatedAt: Timestamp.now()
+          });
+        });
+        
+        await batch.commit();
+      }
+      
+      // Delete the notebook
+      await deleteDoc(doc(db, "notebooks", id));
+      
+      toast({
+        title: "Success",
+        description: "Notebook deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting notebook:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete notebook",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Move a note to a notebook
+  const moveNoteToNotebook = async (noteId: string, notebookId: string | null) => {
+    if (!currentUser) return;
+
+    try {
+      const noteRef = doc(db, "notes", noteId);
+      
+      await updateDoc(noteRef, {
+        notebookId: notebookId,
+        updatedAt: Timestamp.now()
+      });
+      
+      toast({
+        title: "Success",
+        description: notebookId ? "Note moved to notebook" : "Note removed from notebook",
+      });
+    } catch (error: any) {
+      console.error("Error moving note to notebook:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to move note",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+
+  // Filter notes based on activeFilter, activeNotebook, and searchTerm
   const filteredNotes = notes.filter(note => {
-    // First filter by category
+    // First filter by category/filter
     let passesFilter = true;
     
     if (activeFilter === "favorites") {
@@ -442,6 +641,11 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     } else if (activeFilter.startsWith("tag:")) {
       const tagId = activeFilter.split(":")[1];
       passesFilter = !note.isArchived && note.tags.some(tag => tag.id === tagId);
+    }
+    
+    // Then filter by notebook if one is active (except in trash view)
+    if (passesFilter && activeNotebook && activeFilter !== "trash") {
+      passesFilter = note.notebookId === activeNotebook;
     }
     
     // Then filter by search term if it exists
@@ -459,12 +663,15 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     notes,
     tags,
+    notebooks,
     loading,
     activeFilter,
+    activeNotebook,
     searchTerm,
     currentNote,
     setCurrentNote,
     setActiveFilter,
+    setActiveNotebook,
     setSearchTerm,
     addNote,
     updateNote,
@@ -473,6 +680,10 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     restoreNote,
     toggleFavorite,
     addTag,
+    addNotebook,
+    updateNotebook,
+    deleteNotebook,
+    moveNoteToNotebook,
     filteredNotes,
   };
 
