@@ -1,0 +1,67 @@
+hook.js:608 Warning: validateDOMNesting(...): <ol> cannot appear as a descendant of <p>. Error Component Stack
+    at ol (<anonymous>)
+    at p (<anonymous>)
+    at div (<anonymous>)
+    at EmptyState (EmptyState.tsx:5:56)
+    at div (<anonymous>)
+    at NotesList (NotesList.tsx:12:37)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at NotesLayout (NotesLayout.tsx:10:45)
+    at Home (home.tsx:7:36)
+    at NotesProvider (NotesContext.tsx:59:33)
+    at AuthProvider (AuthContext.tsx:33:32)
+    at App (<anonymous>)
+overrideMethod	@	hook.js:608
+printWarning	@	chunk-RPCDYKBN.js?v=4bfe08de:521
+error	@	chunk-RPCDYKBN.js?v=4bfe08de:505
+validateDOMNesting	@	chunk-RPCDYKBN.js?v=4bfe08de:8256
+createInstance	@	chunk-RPCDYKBN.js?v=4bfe08de:8328
+completeWork	@	chunk-RPCDYKBN.js?v=4bfe08de:16290
+completeUnitOfWork	@	chunk-RPCDYKBN.js?v=4bfe08de:19224
+performUnitOfWork	@	chunk-RPCDYKBN.js?v=4bfe08de:19206
+workLoopSync	@	chunk-RPCDYKBN.js?v=4bfe08de:19137
+renderRootSync	@	chunk-RPCDYKBN.js?v=4bfe08de:19116
+performConcurrentWorkOnRoot	@	chunk-RPCDYKBN.js?v=4bfe08de:18678
+workLoop	@	chunk-RPCDYKBN.js?v=4bfe08de:197
+flushWork	@	chunk-RPCDYKBN.js?v=4bfe08de:176
+performWorkUntilDeadline	@	chunk-RPCDYKBN.js?v=4bfe08de:384
+hook.js:608 Warning: validateDOMNesting(...): <pre> cannot appear as a descendant of <p>. Error Component Stack
+    at pre (<anonymous>)
+    at p (<anonymous>)
+    at div (<anonymous>)
+    at EmptyState (EmptyState.tsx:5:56)
+    at div (<anonymous>)
+    at NotesList (NotesList.tsx:12:37)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at NotesLayout (NotesLayout.tsx:10:45)
+    at Home (home.tsx:7:36)
+    at NotesProvider (NotesContext.tsx:59:33)
+    at AuthProvider (AuthContext.tsx:33:32)
+    at App (<anonymous>)
+hook.js:608 Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>. Error Component Stack
+    at div (<anonymous>)
+    at p (<anonymous>)
+    at div (<anonymous>)
+    at EmptyState (EmptyState.tsx:5:56)
+    at div (<anonymous>)
+    at NotesList (NotesList.tsx:12:37)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at NotesLayout (NotesLayout.tsx:10:45)
+    at Home (home.tsx:7:36)
+    at NotesProvider (NotesContext.tsx:59:33)
+    at AuthProvider (AuthContext.tsx:33:32)
+    at App (<anonymous>)
+hook.js:608 Warning: findDOMNode is deprecated and will be removed in the next major release. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://reactjs.org/link/strict-mode-find-node Error Component Stack
+    at NoteEditor (NoteEditor.tsx:17:3)
+    at div (<anonymous>)
+    at NotesLayout (NotesLayout.tsx:10:45)
+    at Home (home.tsx:7:36)
+    at NotesProvider (NotesContext.tsx:59:33)
+    at AuthProvider (AuthContext.tsx:33:32)
+    at App (<anonymous>)
+react-quill.js?v=4bfe08de:5662 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
+﻿
+
