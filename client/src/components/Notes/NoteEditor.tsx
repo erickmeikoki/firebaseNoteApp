@@ -4,6 +4,7 @@ import "react-quill/dist/quill.snow.css";
 import { Note, Tag, Notebook } from "../../types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from "../../hooks/useNotes";
+import { exportNoteToPDF } from "../../lib/pdfExport";
 
 interface NoteEditorProps {
   note: Note;
@@ -29,6 +30,7 @@ export default function NoteEditor({
   const [selectedTags, setSelectedTags] = useState<Tag[]>(note.tags || []);
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | undefined>(note.notebookId);
   const [isLoading, setIsLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -160,6 +162,44 @@ export default function NoteEditor({
 
   const isTagSelected = (tagId: string) => {
     return selectedTags.some(tag => tag.id === tagId);
+  };
+  
+  const handleExportToPdf = async () => {
+    if (isNew) {
+      toast({
+        title: "Save Required",
+        description: "Please save the note before exporting to PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setExportLoading(true);
+      // Create a temporary note object with current edited content
+      const currentNote = {
+        ...note,
+        title,
+        content,
+        tags: selectedTags
+      };
+      
+      await exportNoteToPDF(currentNote);
+      
+      toast({
+        title: "Success",
+        description: "Note exported to PDF successfully",
+      });
+    } catch (err: any) {
+      console.error("Error exporting note to PDF:", err);
+      toast({
+        title: "Export Error",
+        description: err.message || "Failed to export note to PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const modules = {
@@ -304,17 +344,37 @@ export default function NoteEditor({
               </button>
             )}
             <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              {!isNew && (
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={handleExportToPdf}
+                  disabled={isLoading || exportLoading}
+                  style={{
+                    backgroundColor: "rgba(25, 135, 84, 0.1)",
+                    color: "var(--success)",
+                    borderColor: "rgba(25, 135, 84, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <span className="material-icons" style={{ fontSize: "16px" }}>
+                    picture_as_pdf
+                  </span>
+                  {exportLoading ? "Exporting..." : "Export PDF"}
+                </button>
+              )}
               <button 
                 className="btn btn-secondary" 
                 onClick={onClose}
-                disabled={isLoading}
+                disabled={isLoading || exportLoading}
               >
                 Cancel
               </button>
               <button 
                 className="btn" 
                 onClick={handleSave}
-                disabled={isLoading}
+                disabled={isLoading || exportLoading}
               >
                 {isLoading ? "Saving..." : "Save"}
               </button>
