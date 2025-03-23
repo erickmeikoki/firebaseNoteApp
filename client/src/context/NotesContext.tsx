@@ -85,26 +85,41 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       orderBy("updatedAt", "desc")
     );
 
-    const unsubscribeNotes = onSnapshot(notesQuery, async (snapshot) => {
-      const notesData: Note[] = [];
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        notesData.push({
-          id: doc.id,
-          title: data.title,
-          content: data.content,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          tags: data.tags || [],
-          isFavorite: data.isFavorite || false,
-          isArchived: data.isArchived || false,
+    const unsubscribeNotes = onSnapshot(notesQuery, 
+      // Success handler
+      async (snapshot) => {
+        const notesData: Note[] = [];
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          notesData.push({
+            id: doc.id,
+            title: data.title,
+            content: data.content,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            tags: data.tags || [],
+            isFavorite: data.isFavorite || false,
+            isArchived: data.isArchived || false,
+          });
         });
-      });
-      
-      setNotes(notesData);
-      setLoading(false);
-    });
+        
+        setNotes(notesData);
+        setLoading(false);
+      },
+      // Error handler
+      (error) => {
+        console.error("Error fetching notes:", error);
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow read/write access.",
+          variant: "destructive",
+        });
+        // Set empty data and stop loading state
+        setNotes([]);
+        setLoading(false);
+      }
+    );
 
     // Subscribe to tags collection
     const tagsQuery = query(
@@ -112,35 +127,45 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       where("userId", "==", currentUser.uid)
     );
 
-    const unsubscribeTags = onSnapshot(tagsQuery, (snapshot) => {
-      const tagsData: Tag[] = [];
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        tagsData.push({
-          id: doc.id,
-          name: data.name,
-          color: data.color,
-        });
-      });
-      
-      // Count notes for each tag
-      const tagsWithCount = tagsData.map(tag => {
-        const count = notes.filter(note => 
-          note.tags.some(noteTag => noteTag.id === tag.id)
-        ).length;
+    const unsubscribeTags = onSnapshot(
+      tagsQuery, 
+      // Success handler
+      (snapshot) => {
+        const tagsData: Tag[] = [];
         
-        return { ...tag, count };
-      });
-      
-      setTags(tagsWithCount);
-    });
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          tagsData.push({
+            id: doc.id,
+            name: data.name,
+            color: data.color,
+          });
+        });
+        
+        // Count notes for each tag
+        const tagsWithCount = tagsData.map(tag => {
+          const count = notes.filter(note => 
+            note.tags.some(noteTag => noteTag.id === tag.id)
+          ).length;
+          
+          return { ...tag, count };
+        });
+        
+        setTags(tagsWithCount);
+      },
+      // Error handler
+      (error) => {
+        console.error("Error fetching tags:", error);
+        // Set empty tags
+        setTags([]);
+      }
+    );
 
     return () => {
       unsubscribeNotes();
       unsubscribeTags();
     };
-  }, [currentUser]);
+  }, [currentUser, toast]);
 
   // Add a new note
   const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -160,11 +185,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         description: "Note created successfully",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create note",
-        variant: "destructive",
-      });
+      console.error("Error adding note:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create note",
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
@@ -185,11 +220,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         description: "Note updated successfully",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update note",
-        variant: "destructive",
-      });
+      console.error("Error updating note:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update note",
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
@@ -206,11 +251,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         description: "Note deleted successfully",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete note",
-        variant: "destructive",
-      });
+      console.error("Error deleting note:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete note",
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
@@ -232,11 +287,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       
       return docRef.id;
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create tag",
-        variant: "destructive",
-      });
+      console.error("Error adding tag:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create tag",
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };

@@ -1,0 +1,22 @@
+NotesContext.tsx:88 [2025-03-23T19:26:24.459Z]  @firebase/firestore: Firestore (11.5.0): Uncaught Error in snapshot listener: FirebaseError: [code=permission-denied]: Missing or insufficient permissions.
+NotesContext.tsx:88 [2025-03-23T19:26:24.461Z]  @firebase/firestore: Firestore (11.5.0): Uncaught Error in snapshot listener: FirebaseError: [code=permission-denied]: Missing or insufficient permissions.
+hook.js:608 Warning: findDOMNode is deprecated and will be removed in the next major release. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://reactjs.org/link/strict-mode-find-node Error Component Stack
+    at NoteEditor (NoteEditor.tsx:16:3)
+    at div (<anonymous>)
+    at NotesLayout (NotesLayout.tsx:10:45)
+    at Home (home.tsx:7:36)
+    at NotesProvider (NotesContext.tsx:59:33)
+    at AuthProvider (AuthContext.tsx:33:32)
+    at App (<anonymous>)
+react-quill.js?v=4bfe08de:5662 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
+NotesContext.tsx:88 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/chann…Qg9joI&SID=4DEV3bXsBcn1ne-MTK1TGw&RID=36308&TYPE=terminate&zx=a1db8ujwfp0v 400 (Bad Request)
+NotesLayout.tsx:88 Error saving note: FirebaseError: Missing or insufficient permissions.
+NotesContext.tsx:151 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Write/channe…xEyalY&SID=GoycXz_CJkE-ZHBRKYAl2A&RID=86699&TYPE=terminate&zx=ufgfs8pclr74 400 (Bad Request)
+NotesLayout.tsx:88 Error saving note: FirebaseError: Missing or insufficient permissions.
+NotesContext.tsx:151 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Write/channe…DFDisI&SID=t0iO1o68f0igTStaOGWZog&RID=86553&TYPE=terminate&zx=peuatji4mkmg 400 (Bad Request)
+NotesLayout.tsx:88 Error saving note: FirebaseError: Missing or insufficient permissions.
+NotesContext.tsx:151 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Write/channe…ZoEDtE&SID=KNvns7VGzWmXkkbC60UHjA&RID=56576&TYPE=terminate&zx=qpwt1zrs2trv 400 (Bad Request)

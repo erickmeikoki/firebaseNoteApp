@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { Note, Tag } from "../../types";
+import { useToast } from "@/hooks/use-toast";
 
 interface NoteEditorProps {
   note: Note;
@@ -24,29 +25,49 @@ export default function NoteEditor({
   const [content, setContent] = useState(note.content);
   const [selectedTags, setSelectedTags] = useState<Tag[]>(note.tags || []);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setTitle(note.title);
     setContent(note.content);
     setSelectedTags(note.tags || []);
+    setError(null);
   }, [note]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("Please enter a title");
+      setError("Please enter a title");
       return;
     }
 
     try {
       setIsLoading(true);
+      setError(null);
       await onSave({
         title,
         content,
         tags: selectedTags,
       });
-    } catch (error) {
-      console.error("Error saving note:", error);
+    } catch (err: any) {
+      console.error("Error saving note:", err);
+      
+      if (err.code === "permission-denied") {
+        setError("Firebase permissions error: Please update your Firestore security rules.");
+        toast({
+          title: "Permissions Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        setError(err.message || "Failed to save note");
+        toast({
+          title: "Error",
+          description: err.message || "Failed to save note",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,14 +123,24 @@ export default function NoteEditor({
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body">
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: "16px" }}>
+              <span className="material-icons">error</span>
+              <span>{error}</span>
+            </div>
+          )}
+          
           <div className="form-group">
             <input 
               type="text" 
-              className="form-input" 
+              className={`form-input ${!title.trim() && error ? 'error' : ''}`}
               placeholder="Note Title" 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+            {!title.trim() && error && (
+              <div className="form-error">Title is required</div>
+            )}
           </div>
           <div className="form-group">
             <ReactQuill 
