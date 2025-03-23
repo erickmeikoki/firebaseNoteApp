@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode, useContext } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc, Timestamp, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { AuthContext } from "./AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +35,9 @@ interface NotesContextType {
   addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateNote: (id: string, note: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  permanentlyDeleteNote: (id: string) => Promise<void>;
+  restoreNote: (id: string) => Promise<void>;
+  toggleFavorite: (id: string) => Promise<void>;
   addTag: (tag: Omit<Tag, 'id'>) => Promise<string>;
   filteredNotes: Note[];
 }
@@ -52,6 +55,9 @@ export const NotesContext = createContext<NotesContextType>({
   addNote: async () => {},
   updateNote: async () => {},
   deleteNote: async () => {},
+  permanentlyDeleteNote: async () => {},
+  restoreNote: async () => {},
+  toggleFavorite: async () => {},
   addTag: async () => "",
   filteredNotes: [],
 });
@@ -239,8 +245,43 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Delete a note
+  // Move note to trash
   const deleteNote = async (id: string) => {
+    if (!currentUser) return;
+
+    try {
+      const noteRef = doc(db, "notes", id);
+      await updateDoc(noteRef, {
+        isArchived: true,
+        updatedAt: Timestamp.now()
+      });
+      
+      toast({
+        title: "Success",
+        description: "Note moved to trash",
+      });
+    } catch (error: any) {
+      console.error("Error moving note to trash:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to move note to trash",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Permanently delete a note
+  const permanentlyDeleteNote = async (id: string) => {
     if (!currentUser) return;
 
     try {
@@ -248,10 +289,10 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Success",
-        description: "Note deleted successfully",
+        description: "Note permanently deleted",
       });
     } catch (error: any) {
-      console.error("Error deleting note:", error);
+      console.error("Error permanently deleting note:", error);
       
       if (error.code === "permission-denied") {
         toast({
@@ -263,6 +304,83 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         toast({
           title: "Error",
           description: error.message || "Failed to delete note",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Restore note from trash
+  const restoreNote = async (id: string) => {
+    if (!currentUser) return;
+
+    try {
+      const noteRef = doc(db, "notes", id);
+      await updateDoc(noteRef, {
+        isArchived: false,
+        updatedAt: Timestamp.now()
+      });
+      
+      toast({
+        title: "Success",
+        description: "Note restored from trash",
+      });
+    } catch (error: any) {
+      console.error("Error restoring note:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to restore note",
+          variant: "destructive",
+        });
+      }
+      throw error;
+    }
+  };
+  
+  // Toggle favorite status
+  const toggleFavorite = async (id: string) => {
+    if (!currentUser) return;
+    
+    try {
+      const noteRef = doc(db, "notes", id);
+      const noteSnap = await getDoc(noteRef);
+      const noteData = noteSnap.data();
+      
+      if (!noteData) {
+        throw new Error("Note not found");
+      }
+      
+      await updateDoc(noteRef, {
+        isFavorite: !noteData.isFavorite,
+        updatedAt: Timestamp.now()
+      });
+      
+      toast({
+        title: "Success",
+        description: noteData.isFavorite ? "Removed from favorites" : "Added to favorites",
+      });
+    } catch (error: any) {
+      console.error("Error toggling favorite status:", error);
+      
+      if (error.code === "permission-denied") {
+        toast({
+          title: "Firestore Access Error",
+          description: "Please update your Firebase security rules to allow write access.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update favorite status",
           variant: "destructive",
         });
       }
@@ -347,6 +465,9 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     addNote,
     updateNote,
     deleteNote,
+    permanentlyDeleteNote,
+    restoreNote,
+    toggleFavorite,
     addTag,
     filteredNotes,
   };
