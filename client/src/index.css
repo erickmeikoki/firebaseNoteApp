@@ -463,13 +463,63 @@ p {
   margin-bottom: var(--space-md);
 }
 
+.nav-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
 .nav-section-title {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--neutral-500);
-  margin-bottom: var(--space-xs);
   padding: 0 var(--space-xs);
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.btn-icon.btn-sm {
+  width: 24px;
+  height: 24px;
+}
+
+.new-notebook-form {
+  background-color: var(--neutral-100);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.input-sm {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--border-radius-sm);
+  width: 100%;
+  margin-bottom: var(--space-xs);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.notebook-icon {
+  font-size: 1.1rem;
+  margin-right: 4px;
+}
+
+.empty-list-message {
+  padding: var(--space-sm);
+  color: var(--neutral-600);
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 .nav-list {

@@ -3,13 +3,13 @@ import Sidebar from "./Sidebar";
 import NotesList from "./NotesList";
 import NoteEditor from "./NoteEditor";
 import { useNotes } from "../../hooks/useNotes";
-import { Tag, Note } from "../../types";
+import { Tag, Note, Notebook } from "../../types";
 import { Timestamp } from "firebase/firestore";
 
 export default function NotesLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const { currentNote, setCurrentNote, addNote, updateNote, tags } = useNotes();
+  const { currentNote, setCurrentNote, addNote, updateNote, tags, notebooks } = useNotes();
   
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isNewNote, setIsNewNote] = useState(false);

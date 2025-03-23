@@ -1,22 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { Note, Tag } from "../../types";
+import { Note, Tag, Notebook } from "../../types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from "../../hooks/useNotes";
 
 interface NoteEditorProps {
   note: Note;
   availableTags: Tag[];
+  availableNotebooks: Notebook[];
   isOpen: boolean;
   isNew: boolean;
   onClose: () => void;
-  onSave: (note: { title: string; content: string; tags: Tag[] }) => void;
+  onSave: (note: { title: string; content: string; tags: Tag[]; notebookId?: string }) => void;
 }
 
 export default function NoteEditor({ 
   note, 
-  availableTags, 
+  availableTags,
+  availableNotebooks, 
   isOpen, 
   isNew,
   onClose, 
@@ -25,6 +27,7 @@ export default function NoteEditor({
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [selectedTags, setSelectedTags] = useState<Tag[]>(note.tags || []);
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | undefined>(note.notebookId);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -35,6 +38,7 @@ export default function NoteEditor({
     setTitle(note.title);
     setContent(note.content);
     setSelectedTags(note.tags || []);
+    setSelectedNotebookId(note.notebookId);
     setError(null);
   }, [note]);
 
@@ -51,6 +55,7 @@ export default function NoteEditor({
         title,
         content,
         tags: selectedTags,
+        notebookId: selectedNotebookId
       });
     } catch (err: any) {
       console.error("Error saving note:", err);
@@ -229,6 +234,22 @@ export default function NoteEditor({
               placeholder="Write your note here..."
             />
           </div>
+          <div className="form-group">
+            <label className="form-label">Notebook</label>
+            <select
+              className="form-input"
+              value={selectedNotebookId || ""}
+              onChange={(e) => setSelectedNotebookId(e.target.value || undefined)}
+            >
+              <option value="">No notebook</option>
+              {availableNotebooks.map(notebook => (
+                <option key={notebook.id} value={notebook.id}>
+                  {notebook.icon} {notebook.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           <div className="form-group">
             <label className="form-label">Tags</label>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
