@@ -1,5 +1,7 @@
 import { useAuth } from "../../hooks/useAuth";
 import { useNotes } from "../../hooks/useNotes";
+import { useState } from "react";
+import { Notebook } from "@/types";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -8,7 +10,18 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const { currentUser, logout } = useAuth();
-  const { tags, activeFilter, setActiveFilter } = useNotes();
+  const { 
+    tags, 
+    notebooks, 
+    activeFilter, 
+    activeNotebook, 
+    setActiveFilter, 
+    setActiveNotebook, 
+    addNotebook 
+  } = useNotes();
+  
+  const [showNewNotebookInput, setShowNewNotebookInput] = useState(false);
+  const [newNotebookName, setNewNotebookName] = useState("");
 
   const handleLogout = async () => {
     try {
@@ -26,6 +39,44 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       .join("")
       .toUpperCase()
       .substring(0, 2);
+  };
+  
+  const handleCreateNotebook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNotebookName.trim()) return;
+    
+    try {
+      await addNotebook({
+        name: newNotebookName.trim(),
+        description: "",
+        color: "#4f46e5", // Default color
+        icon: "📓", // Default icon
+      });
+      
+      // Reset input
+      setNewNotebookName("");
+      setShowNewNotebookInput(false);
+    } catch (error) {
+      console.error("Error creating notebook:", error);
+    }
+  };
+  
+  const handleNotebookClick = (notebookId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    // If clicking on already active notebook, deactivate it
+    if (activeNotebook === notebookId) {
+      setActiveNotebook(null);
+    } else {
+      setActiveNotebook(notebookId);
+    }
+    
+    // Make sure we're in non-trash view
+    if (activeFilter === 'trash') {
+      setActiveFilter('all');
+    }
+    
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) toggleSidebar();
   };
 
   return (
@@ -85,6 +136,65 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           </ul>
         </div>
         
+        {/* Notebooks Section */}
+        <div className="nav-section">
+          <div className="nav-section-header">
+            <div className="nav-section-title">Notebooks</div>
+            <button 
+              className="btn-ghost btn-icon btn-sm" 
+              title="Create notebook"
+              onClick={() => setShowNewNotebookInput(true)}
+            >
+              <span className="material-icons">add</span>
+            </button>
+          </div>
+          
+          {showNewNotebookInput && (
+            <form onSubmit={handleCreateNotebook} className="new-notebook-form">
+              <input
+                type="text"
+                value={newNotebookName}
+                onChange={(e) => setNewNotebookName(e.target.value)}
+                placeholder="Notebook name"
+                className="input-sm"
+                autoFocus
+              />
+              <div className="form-actions">
+                <button type="submit" className="btn-sm btn-primary">Create</button>
+                <button 
+                  type="button" 
+                  className="btn-sm btn-ghost"
+                  onClick={() => {
+                    setShowNewNotebookInput(false);
+                    setNewNotebookName("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+          
+          <ul className="nav-list">
+            {notebooks.map(notebook => (
+              <li className="nav-item" key={notebook.id}>
+                <a 
+                  href="#" 
+                  className={`nav-link ${activeNotebook === notebook.id ? 'active' : ''}`}
+                  onClick={(e) => handleNotebookClick(notebook.id, e)}
+                >
+                  <span className="notebook-icon">{notebook.icon || "📓"}</span>
+                  <span>{notebook.name}</span>
+                </a>
+              </li>
+            ))}
+            {notebooks.length === 0 && !showNewNotebookInput && (
+              <li className="empty-list-message">No notebooks yet</li>
+            )}
+          </ul>
+        </div>
+        
+        {/* Tags Section */}
         {tags.length > 0 && (
           <div className="nav-section">
             <div className="nav-section-title">Tags</div>
@@ -131,7 +241,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             />
           ) : (
             <div className="avatar">
-              {getInitials(currentUser?.displayName)}
+              {currentUser && currentUser.displayName 
+                ? getInitials(currentUser.displayName) 
+                : getInitials(null)}
             </div>
           )}
           
